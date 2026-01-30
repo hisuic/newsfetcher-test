@@ -1,0 +1,107 @@
+# =========================
+# Node / Web App
+# =========================
+node_modules/
+dist/
+build/
+.cache/
+.tmp/
+.temp/
+
+# logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# env
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# TypeScript
+# =========================
+*.tsbuildinfo
+
+# =========================
+# Vite / Next / React
+# =========================
+.vite/
+.next/
+out/
+.vercel/
+
+# =========================
+# Test / coverage
+# =========================
+coverage/
+.nyc_output/
+
+# =========================
+# Python (もしツールを書く場合)
+# =========================
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# =========================
+# Docker
+# =========================
+docker-data/
+*.pid
+
+# =========================
+# Database local files
+# =========================
+*.sqlite
+*.db
+*.sqlite3
+
+# =========================
+# AI Agent / Codex 拡張用
+# =========================
+
+# 個人用エージェント設定
+agent.local.md
+agent.private.md
+
+# 個人プロンプトメモ
+prompts/
+scratch-prompts/
+
+# 実験スキル
+skills-local/
+skills-exp/
+skills-experimental/
+
+# ローカルAI生成ログ
+ai-logs/
+agent-logs/
+generation-cache/
+
+# 一時生成物
+.ai-cache/
+.codex-cache/
+
+# =========================
+# Optional: keep shared agent config
+# =========================
+# ↓ これは共有するので除外しない
+#!agent.md
+#!skills/
+#!rules.md
+#!templates/
+
