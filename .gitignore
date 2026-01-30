@@ -7,6 +7,7 @@ build/
 .cache/
 .tmp/
 .temp/
+tmp/
 
 # logs
 logs/
@@ -104,4 +105,3 @@ generation-cache/
 #!skills/
 #!rules.md
 #!templates/
-
