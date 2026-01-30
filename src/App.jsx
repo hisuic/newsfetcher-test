@@ -13,6 +13,9 @@ const FEEDS = [
 ];
 
 const KEYWORDS = ['All', 'AI', 'Cloud', 'Security', 'DevOps', 'Web', 'Mobile', 'Data'];
+const CACHE_KEY = 'wamodern-news-cache-v1';
+const CACHE_TTL_MS = 10 * 60 * 1000;
+const FEED_TIMEOUT_MS = 6000;
 
 const formatDate = (date) =>
   date.toLocaleString('ja-JP', {
@@ -58,14 +61,57 @@ const parseFeed = (xmlText, source) => {
 
 const stripHtml = (value) => value.replace(/<[^>]*>/g, '').trim();
 
-const fetchFeed = async (feed) => {
+const fetchFeed = async (feed, signal) => {
   const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(feed.url)}`;
-  const response = await fetch(proxyUrl);
+  const response = await fetch(proxyUrl, { signal });
   if (!response.ok) {
     throw new Error(`Failed to fetch ${feed.name}`);
   }
   const text = await response.text();
   return parseFeed(text, feed.name);
+};
+
+const mergeItems = (baseItems, incoming) => {
+  const deduped = new Map(baseItems.map((item) => [item.url, item]));
+  incoming.forEach((item) => {
+    if (!deduped.has(item.url)) {
+      deduped.set(item.url, item);
+    }
+  });
+
+  return Array.from(deduped.values()).sort(
+    (a, b) => b.publishedAt.getTime() - a.publishedAt.getTime()
+  );
+};
+
+const loadCache = () => {
+  const raw = localStorage.getItem(CACHE_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed.items || !parsed.updatedAt) return null;
+    const updatedAt = new Date(parsed.updatedAt);
+    if (Number.isNaN(updatedAt.getTime())) return null;
+    if (Date.now() - updatedAt.getTime() > CACHE_TTL_MS) return null;
+    const items = parsed.items.map((item) => ({
+      ...item,
+      publishedAt: new Date(item.publishedAt),
+    }));
+    return { items, updatedAt };
+  } catch (error) {
+    return null;
+  }
+};
+
+const saveCache = (items, updatedAt) => {
+  const payload = {
+    updatedAt: updatedAt.toISOString(),
+    items: items.map((item) => ({
+      ...item,
+      publishedAt: item.publishedAt.toISOString(),
+    })),
+  };
+  localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
 };
 
 const App = () => {
@@ -74,32 +120,51 @@ const App = () => {
   const [updatedAt, setUpdatedAt] = useState(null);
   const [selectedKeyword, setSelectedKeyword] = useState('All');
   const [selectedSource, setSelectedSource] = useState('All');
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchNews = async () => {
-    setStatus('更新中…');
+    if (isLoading) return;
+    setIsLoading(true);
+    const cached = loadCache();
+    if (cached) {
+      setItems(cached.items);
+      setUpdatedAt(cached.updatedAt);
+      setStatus('キャッシュ表示中…');
+    } else {
+      setStatus('更新中…');
+    }
     try {
-      const results = await Promise.allSettled(FEEDS.map((feed) => fetchFeed(feed)));
-      const merged = results
-        .filter((result) => result.status === 'fulfilled')
-        .flatMap((result) => result.value);
+      let completed = 0;
+      let failed = 0;
+      let nextItems = cached ? cached.items : [];
 
-      const deduped = new Map();
-      merged.forEach((item) => {
-        if (!deduped.has(item.url)) {
-          deduped.set(item.url, item);
-        }
-      });
-
-      const sorted = Array.from(deduped.values()).sort(
-        (a, b) => b.publishedAt.getTime() - a.publishedAt.getTime()
+      await Promise.all(
+        FEEDS.map(async (feed) => {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), FEED_TIMEOUT_MS);
+          try {
+            const feedItems = await fetchFeed(feed, controller.signal);
+            nextItems = mergeItems(nextItems, feedItems);
+            setItems(nextItems);
+            completed += 1;
+          } catch (error) {
+            failed += 1;
+          } finally {
+            clearTimeout(timeoutId);
+            setStatus(`取得中: ${completed}/${FEEDS.length} 失敗: ${failed}`);
+          }
+        })
       );
 
-      setItems(sorted);
-      setUpdatedAt(new Date());
-      setStatus(`取得件数: ${sorted.length}`);
+      const updated = new Date();
+      setUpdatedAt(updated);
+      setStatus(`取得件数: ${nextItems.length} 失敗: ${failed}`);
+      saveCache(nextItems, updated);
     } catch (error) {
       setItems([]);
       setStatus('取得失敗: しばらくしてから再度お試しください');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -135,8 +200,8 @@ const App = () => {
             <span id="last-updated">
               更新日時: {updatedAt ? formatDate(updatedAt) : '--'}
             </span>
-            <button className="btn" onClick={fetchNews}>
-              更新
+            <button className="btn" onClick={fetchNews} disabled={isLoading}>
+              {isLoading ? '取得中…' : '更新'}
             </button>
           </div>
         </div>
