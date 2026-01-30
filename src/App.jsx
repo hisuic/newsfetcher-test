@@ -193,9 +193,7 @@ const App = () => {
 
       <header className="hero">
         <div className="hero__inner">
-          <p className="hero__kicker">WAMODERN • IT NEWS</p>
-          <h1 className="hero__title">和モダン ITニュース</h1>
-          <p className="hero__sub">黒と金、木目の陰影で魅せる最新ITニュース一覧</p>
+          <h1 className="hero__title">IT最新ニュース一覧</h1>
           <div className="hero__meta">
             <span id="last-updated">
               更新日時: {updatedAt ? formatDate(updatedAt) : '--'}
