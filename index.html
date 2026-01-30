@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>和モダン IT News</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg-wood"></div>
+    <div class="bg-ink"></div>
+    <header class="hero">
+      <div class="hero__inner">
+        <p class="hero__kicker">WAMODERN • IT NEWS</p>
+        <h1 class="hero__title">和モダン ITニュース</h1>
+        <p class="hero__sub">黒と金、木目の陰影で魅せる最新ITニュース一覧</p>
+        <div class="hero__meta">
+          <span id="last-updated">更新日時: --</span>
+          <button id="refresh" class="btn">更新</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="panel">
+        <div class="panel__head">
+          <div>
+            <h2>最新トピック</h2>
+            <p class="muted">クリックで元記事へ移動します</p>
+          </div>
+          <div class="panel__status" id="status">読み込み中…</div>
+        </div>
+        <div class="news-grid" id="news-grid"></div>
+      </section>
+
+      <section class="panel panel--accent">
+        <div class="panel__head">
+          <div>
+            <h2>注目キーワード</h2>
+            <p class="muted">AI / Cloud / Security などの話題を優先表示</p>
+          </div>
+        </div>
+        <div class="tag-row" id="tag-row"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Powered by open tech feeds • Design: Wamodern Luxury</p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
